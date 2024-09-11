@@ -1,0 +1,22 @@
+{
+	"id": "nodebb-plugin-web-push",
+	"url": "https://github.com/NodeBB/nodebb-plugin-web-push",
+	"library": "./library.js",
+	"hooks": [
+		{ "hook": "static:app.load", "method": "init" },
+		{ "hook": "static:api.routes", "method": "addRoutes" },
+		{ "hook": "filter:admin.header.build", "method": "addAdminNavigation" },
+		{ "hook": "filter:config.get", "method": "appendConfig" },
+		{ "hook": "action:notification.pushed", "method": "onNotificationPush" },
+		{ "hook": "filter:user.profileMenu", "method": "addProfileItem" }
+	],
+	"languages": "public/languages",
+	"scripts": [
+		"public/lib/main.js"
+	],
+	"modules": {
+		"../client/account/web-push.js": "./public/lib/settings.js",
+		"../admin/plugins/web-push.js": "./public/lib/admin.js"
+	},
+	"templates": "templates"
+}
