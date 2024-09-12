@@ -127,7 +127,8 @@ plugin.onNotificationPush = async ({ notification, uidsNotified: uids }) => {
 				await webPush.sendNotification(subscription, JSON.stringify(payload));
 			} catch (e) {
 				// Errored — remove subscription from user
-				subscriptions.remove(uid, subscription);
+				winston.info(`[plugins/web-push] Push failed: ${e.code}; ${e.message}; statusCode: ${e.statusCode}`);
+				// subscriptions.remove(uid, subscription);
 			}
 		});
 	});
@@ -153,6 +154,9 @@ plugin.addProfileItem = async (data) => {
 };
 
 async function constructPayload({ bodyShort, bodyLong, path }, language) {
+	let { maxLength } = await meta.settings.get('web-push');
+	maxLength = parseInt(maxLength, 10) || 256;
+
 	if (!language) {
 		language = meta.config.defaultLang || 'en-GB';
 	}
@@ -165,6 +169,11 @@ async function constructPayload({ bodyShort, bodyLong, path }, language) {
 	if (!bodyLong) {
 		body = title;
 		title = meta.config.title || 'NodeBB';
+	}
+
+	// Truncate body if needed
+	if (body.length > maxLength) {
+		body = `${body.slice(0, maxLength)}…`;
 	}
 
 	return {

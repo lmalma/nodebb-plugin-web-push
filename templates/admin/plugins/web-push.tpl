@@ -7,9 +7,14 @@
 				<div class="mb-4">
 					<h5 class="fw-bold tracking-tight settings-header">Settings</h5>
 
-					<p class="fst-italic">
-						There are no settings to adjust for this plugin — at this time.
-					</p>
+					<div class="mb-3">
+						<label class="form-label" for="maxLength">Maximum length</label>
+						<input type="number" min="0" max="4096" id="maxLength" name="maxLength" title="Maximum message length" class="form-control" placeholder="256">
+						<p class="form-text">
+							Additional characters beyond this specified length will be truncated.
+							Due to a software limitation, if the message body is greater than 4096 bytes, the message itself will be an attachment in the push notification.
+						</p>
+					</div>
 				</div>
 			</form>
 
