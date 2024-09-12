@@ -85,6 +85,18 @@ plugin.addRoutes = async ({ router, middleware, helpers }) => {
 		await subscriptions.remove(req.uid, subscription);
 		helpers.formatApiResponse(200, res);
 	});
+
+	routeHelpers.setupApiRoute(router, 'post', '/web-push/test', middlewares, async (req, res) => {
+		if (!req.uid) {
+			return helpers.notAllowed(req, res);
+		}
+
+		const { subscription } = req.body;
+		await webPush.sendNotification(subscription, JSON.stringify({
+			title: 'Test notification',
+			body: 'This is a test message sent from NodeBB',
+		}));
+	});
 };
 
 plugin.addAdminNavigation = (header) => {

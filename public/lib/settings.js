@@ -1,7 +1,9 @@
+/* eslint-disable import/no-unresolved */
+
 'use strict';
 
 import { post, del } from 'api';
-import { success } from 'alerts';
+import { success, warning } from 'alerts';
 
 // eslint-disable-next-line import/prefer-default-export
 export async function init() {
@@ -16,11 +18,15 @@ export async function init() {
 			const action = e.target.getAttribute('data-action');
 
 			switch (action) {
-				// case 'test': {
-				// 	await post('/plugins/ntfy/test');
-				// 	success('[[ntfy:toast.test_success]]');
-				// 	break;
-				// }
+				case 'test': {
+					if (subscription) {
+						await post('/plugins/web-push/test', { subscription });
+						success('[[web-push:toast.test_success]]');
+					} else {
+						warning('[[web-push:toast.test_unavailable]]');
+					}
+					break;
+				}
 
 				case 'toggle': {
 					const countEl = document.querySelector('#deviceCount strong');
@@ -77,7 +83,7 @@ export async function init() {
 function urlBase64ToUint8Array(base64String) {
 	var padding = '='.repeat((4 - (base64String.length % 4)) % 4);
 	var base64 = (base64String + padding)
-		.replace(/\-/g, '+')
+		.replace(/-/g, '+')
 		.replace(/_/g, '/');
 
 	var rawData = window.atob(base64);
