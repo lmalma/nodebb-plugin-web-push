@@ -5,6 +5,7 @@ const winston = require.main.require('winston');
 const webPush = require('web-push');
 const validator = require('validator');
 
+const db = require.main.require('./src/database');
 const user = require.main.require('./src/user');
 const meta = require.main.require('./src/meta');
 const utils = require.main.require('./src/utils');
@@ -114,6 +115,11 @@ plugin.onNotificationPush = async ({ notification, uidsNotified: uids }) => {
 	uids = uids.filter(uid => subs.get(uid).size);
 	const userSettings = await user.getMultipleUserSettings(uids);
 
+	// Save recipients by nid (for use by .rescind)
+	const refKey = `web-push:nid:${notification.mergeId || notification.nid}:uids`;
+	await db.setAdd(refKey, uids);
+	db.pexpire(refKey, 1000 * 60 * 60 * 48); // only track last 48 hours
+
 	let payloads = await Promise.all(uids.map(async (uid, idx) => {
 		const payload = await constructPayload(notification, userSettings[idx].userLang);
 		return [uid, payload];
@@ -132,6 +138,27 @@ plugin.onNotificationPush = async ({ notification, uidsNotified: uids }) => {
 			}
 		});
 	});
+};
+
+plugin.onNotificationRescind = async ({ nids }) => {
+	const notificationKeys = nids.map(nid => `notifications:${nid}`);
+	let mergeIds = await db.getObjectsFields(notificationKeys, ['mergeId']);
+	mergeIds = mergeIds.map(o => o.mergeId);
+
+	// Favour mergeIds over nids, then eliminate dupes
+	const tags = new Set(notificationKeys.map((key, i) => mergeIds[i] || key));
+	const recipients = await db.getSetsMembers(Array.from(tags).map(tag => `web-push:nid:${tag}:uids`));
+
+	Promise.all(Array.from(tags).map(async (tag, idx) => {
+		let subs = await subscriptions.list(recipients[idx]);
+		subs = new Set(...Object.values(Object.fromEntries(subs))); // wtf
+
+		if (subs.size) {
+			subs.forEach(async (subscription) => {
+				await webPush.sendNotification(subscription, JSON.stringify({ tag }));
+			});
+		}
+	}));
 };
 
 plugin.addProfileItem = async (data) => {
@@ -153,7 +180,7 @@ plugin.addProfileItem = async (data) => {
 	return data;
 };
 
-async function constructPayload({ bodyShort, bodyLong, path }, language) {
+async function constructPayload({ nid, mergeId, bodyShort, bodyLong, path }, language) {
 	let { maxLength } = await meta.settings.get('web-push');
 	maxLength = parseInt(maxLength, 10) || 256;
 
@@ -163,6 +190,7 @@ async function constructPayload({ bodyShort, bodyLong, path }, language) {
 
 	let [title, body] = await translator.translateKeys([bodyShort, bodyLong], language);
 	([title, body] = [title, body].map(str => validator.unescape(utils.stripHTMLTags(str))));
+	const tag = mergeId || nid;
 	const url = `${nconf.get('url')}${path}`;
 
 	// Handle empty bodyLong
@@ -179,6 +207,7 @@ async function constructPayload({ bodyShort, bodyLong, path }, language) {
 	return {
 		title,
 		body,
+		tag,
 		data: { url },
 	};
 }
