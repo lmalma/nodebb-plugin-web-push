@@ -15,6 +15,24 @@
 							Due to a software limitation, if the message body is greater than 4096 bytes, the message itself will be an attachment in the push notification.
 						</p>
 					</div>
+
+					<div class="mb-3">
+						<label class="form-label" for="badge">Badge URL</label>
+						<input type="text" id="badge" name="badge" title="Badge" class="form-control" placeholder="https://...">
+						<p class="form-text">
+							Optional — overrides the badge for messages sent (usually seen in the notification bar on mobile devices)
+							By default, the site's configured "touch icon" is sent.
+						</p>
+					</div>
+
+					<div class="mb-3">
+						<label class="form-label" for="icon">Icon URL</label>
+						<input type="text" id="icon" name="icon" title="Icon" class="form-control" placeholder="https://...">
+						<p class="form-text">
+							Optional — overrides the icon for messages sent (can be used for branding, etc.)
+							By default, the site's configured "touch icon" is sent.
+						</p>
+					</div>
 				</div>
 			</form>
 

@@ -100,6 +100,8 @@ plugin.addRoutes = async ({ router, middleware, helpers }) => {
 			tag: 'web-push-test',
 			data: {
 				url: `${nconf.get('url')}/me/web-push`,
+				icon: `${nconf.get('url')}/apple-touch-icon`,
+				badge: `${nconf.get('url')}/apple-touch-icon`,
 			},
 		}));
 	});
@@ -186,7 +188,7 @@ plugin.addProfileItem = async (data) => {
 };
 
 async function constructPayload(notification, uid, language) {
-	let { maxLength } = await meta.settings.get('web-push');
+	let { maxLength, icon, badge } = await meta.settings.get('web-push');
 	maxLength = parseInt(maxLength, 10) || 256;
 
 	if (!language) {
@@ -220,11 +222,14 @@ async function constructPayload(notification, uid, language) {
 		body = `${body.slice(0, maxLength)}…`;
 	}
 
+	icon = icon || `${nconf.get('url')}/apple-touch-icon`;
+	badge = badge || `${nconf.get('url')}/apple-touch-icon`;
+
 	return {
 		title,
 		body,
 		tag,
-		data: { url },
+		data: { url, icon, badge },
 	};
 }
 
