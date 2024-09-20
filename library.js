@@ -96,6 +96,9 @@ plugin.addRoutes = async ({ router, middleware, helpers }) => {
 		await webPush.sendNotification(subscription, JSON.stringify({
 			title: 'Test notification',
 			body: 'This is a test message sent from NodeBB',
+			data: {
+				url: `${nconf.get('url')}/me/web-push`,
+			},
 		}));
 	});
 };
