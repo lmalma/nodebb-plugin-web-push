@@ -93,17 +93,15 @@ plugin.addRoutes = async ({ router, middleware, helpers }) => {
 			return helpers.notAllowed(req, res);
 		}
 
+		const { userLang } = await user.getSettings(req.uid);
 		const { subscription } = req.body;
-		await webPush.sendNotification(subscription, JSON.stringify({
-			title: 'Test notification',
-			body: 'This is a test message sent from NodeBB',
-			tag: 'web-push-test',
-			data: {
-				url: `${nconf.get('url')}/me/web-push`,
-				icon: `${nconf.get('url')}/apple-touch-icon`,
-				badge: `${nconf.get('url')}/apple-touch-icon`,
-			},
-		}));
+		const payload = await constructPayload({
+			nid: utils.generateUUID(),
+			bodyShort: 'Test notification',
+			bodyLong: 'This is a test message sent from NodeBB',
+			path: `${nconf.get('url')}/me/web-push`,
+		}, req.uid, userLang);
+		await webPush.sendNotification(subscription, JSON.stringify(payload));
 	});
 };
 
@@ -187,13 +185,15 @@ plugin.addProfileItem = async (data) => {
 	return data;
 };
 
-async function constructPayload(notification, uid, language) {
+async function constructPayload(notification, uid, lang) {
 	let { maxLength, icon, badge } = await meta.settings.get('web-push');
 	maxLength = parseInt(maxLength, 10) || 256;
 
-	if (!language) {
-		language = meta.config.defaultLang || 'en-GB';
+	// i18n/rtl
+	if (!lang) {
+		lang = meta.config.defaultLang || 'en-GB';
 	}
+	const dir = await translator.translate('[[language:dir]]', lang);
 
 	// Merge with related unread notifications
 	if (notification.mergeId) {
@@ -206,7 +206,7 @@ async function constructPayload(notification, uid, language) {
 
 	const { nid, mergeId, bodyShort, bodyLong, path } = notification;
 
-	let [title, body] = await translator.translateKeys([bodyShort, bodyLong], language);
+	let [title, body] = await translator.translateKeys([bodyShort, bodyLong], lang);
 	([title, body] = [title, body].map(str => validator.unescape(utils.stripHTMLTags(str))));
 	const tag = mergeId || nid;
 	const url = `${nconf.get('url')}${path}`;
@@ -229,6 +229,8 @@ async function constructPayload(notification, uid, language) {
 		title,
 		body,
 		tag,
+		lang,
+		dir,
 		data: { url, icon, badge },
 	};
 }
