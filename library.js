@@ -10,6 +10,7 @@ const user = require.main.require('./src/user');
 const meta = require.main.require('./src/meta');
 const utils = require.main.require('./src/utils');
 const translator = require.main.require('./src/translator');
+const notifications = require.main.require('./src/notifications');
 
 const controllers = require('./lib/controllers');
 const subscriptions = require('./lib/subscriptions');
@@ -125,7 +126,7 @@ plugin.onNotificationPush = async ({ notification, uidsNotified: uids }) => {
 	db.pexpire(refKey, 1000 * 60 * 60 * 48); // only track last 48 hours
 
 	let payloads = await Promise.all(uids.map(async (uid, idx) => {
-		const payload = await constructPayload(notification, userSettings[idx].userLang);
+		const payload = await constructPayload(notification, uid, userSettings[idx].userLang);
 		return [uid, payload];
 	}));
 	payloads = new Map(payloads);
@@ -184,13 +185,24 @@ plugin.addProfileItem = async (data) => {
 	return data;
 };
 
-async function constructPayload({ nid, mergeId, bodyShort, bodyLong, path }, language) {
+async function constructPayload(notification, uid, language) {
 	let { maxLength } = await meta.settings.get('web-push');
 	maxLength = parseInt(maxLength, 10) || 256;
 
 	if (!language) {
 		language = meta.config.defaultLang || 'en-GB';
 	}
+
+	// Merge with related unread notifications
+	if (notification.mergeId) {
+		const related = await notifications.findRelated([notification.mergeId], `uid:${uid}:notifications:unread`);
+		const merged = await notifications.getMultiple(related).then(notifications.merge);
+		if (merged.length) {
+			notification = merged.pop();
+		}
+	}
+
+	const { nid, mergeId, bodyShort, bodyLong, path } = notification;
 
 	let [title, body] = await translator.translateKeys([bodyShort, bodyLong], language);
 	([title, body] = [title, body].map(str => validator.unescape(utils.stripHTMLTags(str))));
