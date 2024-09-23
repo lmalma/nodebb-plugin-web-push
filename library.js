@@ -99,7 +99,7 @@ plugin.addRoutes = async ({ router, middleware, helpers }) => {
 			nid: utils.generateUUID(),
 			bodyShort: 'Test notification',
 			bodyLong: 'This is a test message sent from NodeBB',
-			path: `${nconf.get('url')}/me/web-push`,
+			path: `/me/web-push`,
 		}, req.uid, userLang);
 		await webPush.sendNotification(subscription, JSON.stringify(payload));
 	});
@@ -223,7 +223,9 @@ async function constructPayload(notification, uid, lang) {
 	}
 
 	icon = icon || `${nconf.get('url')}/apple-touch-icon`;
-	badge = badge || `${nconf.get('url')}/apple-touch-icon`;
+	if (!badge) { // badge fallbacks
+		badge = `${nconf.get('url')}${meta.config['brand:maskableIcon'] || '/apple-touch-icon'}`;
+	}
 
 	return {
 		title,
