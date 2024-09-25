@@ -45,6 +45,12 @@ plugin.appendConfig = async (config) => {
 	return config;
 };
 
+plugin.registerServiceWorker = async (data) => {
+	const { scripts } = data;
+	scripts.add(`nodebb-plugin-web-push/static/web-push.js`);
+	return data;
+};
+
 async function assertVapidConfiguration() {
 	let { publicKey, privateKey } = await meta.settings.get('web-push');
 	if (!publicKey || !privateKey) {
