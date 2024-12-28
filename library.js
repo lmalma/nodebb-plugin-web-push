@@ -165,11 +165,15 @@ plugin.onNotificationRescind = async ({ nids }) => {
 		subs = new Set(...Object.values(Object.fromEntries(subs))); // wtf
 
 		if (subs.size) {
-			subs.forEach(async (subscription) => {
-				await webPush.sendNotification(subscription, JSON.stringify({ tag }));
-			});
+			await Promise.all(Array.from(subs).map(async (subscription) => {
+				try {
+					await webPush.sendNotification(subscription, JSON.stringify({ tag }));
+				} catch (e) {
+					winston.info(`[plugins/web-push] Push failed: ${e.code}; ${e.message}; statusCode: ${e.statusCode}`);
+				}
+			}));
 		}
-	}));
+	})).catch(err => winston.error(err.stack));
 };
 
 plugin.addProfileItem = async (data) => {
