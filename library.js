@@ -176,19 +176,19 @@ plugin.onNotificationRescind = async ({ nids }) => {
 	})).catch(err => winston.error(err.stack));
 };
 
-plugin.addProfileItem = async (data) => {
-	const title = await translator.translate('[[web-push:profile.label]]');
+plugin.addProfileItem = (data) => {
 	data.links.push({
 		id: 'web-push',
 		route: 'web-push',
 		icon: 'fa-bell-o',
-		name: title,
+		name: '[[web-push:profile.label]]',
 		visibility: {
 			self: true,
 			other: false,
 			moderator: false,
 			globalMod: false,
 			admin: false,
+			canViewInfo: false,
 		},
 	});
 
