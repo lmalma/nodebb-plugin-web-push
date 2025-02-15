@@ -1,6 +1,6 @@
 {
   "name": "nodebb-plugin-web-push",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "A starter kit for quickly creating NodeBB plugins",
   "main": "library.js",
   "repository": {
