@@ -1,11 +1,9 @@
-/* eslint-disable import/no-unresolved */
 
 'use strict';
 
 import { post, del } from 'api';
 import { success, warning } from 'alerts';
 
-// eslint-disable-next-line import/prefer-default-export
 export async function init() {
 	const containerEl = document.querySelector('.account');
 	const registration = await navigator.serviceWorker.ready;

@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 
 'use strict';
 
@@ -39,7 +38,6 @@ self.addEventListener('notificationclick', (event) => {
 		self.clients
 			.matchAll({ type: 'window' })
 			.then((clientList) => {
-				// eslint-disable-next-line no-restricted-syntax
 				for (const client of clientList) {
 					const { hostname } = new URL(client.url);
 					if (target && hostname === target.hostname && 'focus' in client) {

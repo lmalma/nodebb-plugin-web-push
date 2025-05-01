@@ -3,7 +3,7 @@
 'use strict';
 
 (async () => {
-	const [hooks, api] = await app.require(['hooks', 'api']);
+	const [hooks] = await app.require(['hooks']);
 
 	hooks.on('action:app.load', async () => {
 		// ...
